@@ -119,6 +119,8 @@ noisify <- function(ts_mat, noise_level){
 #ave RMS error (in SD of current time series) from nonLinearPrediction with estimated optimal time 
 #lag and embedding dimension (using timeLag and estimateEmbeddingDim); choose test set length 
 #and prediction horizon (test_len and pred_hor)
+#Change param "first.e.decay" to "first.value" with additional param for fixed AMI 
+#threshold if "first.e.decay" throws an error (see plot for appropriate threshold)
 predErrors <- function(ts_mat, test_len, pred_hor){
   N <- ncol(ts_mat)
   totalErrorinSD <- 0
@@ -130,7 +132,7 @@ predErrors <- function(ts_mat, test_len, pred_hor){
       actual_val <- ts[ts_len - test_len + pred_hor + i]
       train_ts <- ts[1:(ts_len - test_len + i)]
       init_radius <- sd(train_ts)/4
-      time_lag <- timeLag(train_ts, "ami", "first.value", 0.3)
+      time_lag <- timeLag(train_ts, "ami", "first.e.decay")
       emb_dim <- estimateEmbeddingDim(time.series = train_ts, time.lag = time_lag)
       pred_val <- nonLinearPrediction(train_ts, emb_dim, time_lag, pred_hor, init_radius, init_radius/8)
       error <- error + (actual_val - pred_val)**2
@@ -229,6 +231,8 @@ gen_arima_mat <- function(sys, params, test_len_proportion=0.1, pred_hor=3){
 #prediction horizon (used for empirical dataset)
 
 #NLTSA function
+#Change param "first.e.decay" to "first.value" with additional param for fixed AMI 
+#threshold if "first.e.decay" throws an error (see plot for appropriate threshold)
 predtsErrors <- function(ts, test_len, pred_hor){
   ts_len <- length(ts)
   error <- 0
@@ -236,9 +240,9 @@ predtsErrors <- function(ts, test_len, pred_hor){
     actual_val <- ts[ts_len - test_len + pred_hor + i]
     train_ts <- ts[1:(ts_len - test_len + i)]
     init_radius <- sd(train_ts)/4
-    time_lag <- timeLag(train_ts, "ami", "first.value", 0.2)
-    #emb_dim <- estimateEmbeddingDim(time.series = train_ts, time.lag = time_lag)
-    pred_val <- nonLinearPrediction(train_ts, 3, time_lag, pred_hor, init_radius, init_radius/8)
+    time_lag <- timeLag(train_ts, "ami", "first.e.decay")
+    emb_dim <- estimateEmbeddingDim(time.series = train_ts, time.lag = time_lag, do.plot = FALSE)
+    pred_val <- nonLinearPrediction(train_ts, emb_dim, time_lag, pred_hor, init_radius, init_radius/8)
     error <- error + (actual_val - pred_val)**2
   }
   error <- sqrt(error / (test_len - pred_hor + 1))
